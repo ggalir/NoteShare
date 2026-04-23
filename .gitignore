@@ -1,0 +1,41 @@
+# Gradle
+**/.gradle/
+**/build/
+**/*.gradle.kts.dsl-cache
+
+# IntelliJ IDEA
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# VSCode
+**/.vscode/
+**/*.code-workspace
+
+# Java
+**/*.class
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Spring Boot
+**/application-local.yml
+**/application-local.properties
+
+# Node / frontend
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+
+# OS
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+**/*.log
+**/logs/
