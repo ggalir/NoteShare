@@ -1,0 +1,39 @@
+### Base URL — change to http://noteshare-sharing:8083 when testing inside Docker
+@baseUrl = http://localhost:8083
+
+### JWT from auth service — run auth.http step 4 first to populate this
+@jwt = {{jwt_token}}
+
+
+### ─── HAPPY PATH ─────────────────────────────────────────────────────────────
+
+### 1. Create a note first (in notes service) — get a noteId to share
+### Run notes.http step 1 first, then set note_id here:
+@noteId = {{note_id}}
+
+
+### 2. Create a share link — expect 201; token saved to share_token variable
+POST {{baseUrl}}/api/share/{{noteId}}
+Authorization: Bearer {{jwt}}
+
+> {%
+    client.global.set("share_token", response.body.token);
+    client.test("Create share returns 201", function() {
+        client.assert(response.status === 201, "Expected 201");
+        client.assert(response.body.token !== undefined, "Expected token in body");
+    });
+%}
+
+
+### 3. Resolve share link — no auth required, returns full note content
+GET {{baseUrl}}/api/share/{{share_token}}
+
+
+### ─── ERROR CASES ─────────────────────────────────────────────────────────────
+
+### 4. Resolve with unknown token — expect 404
+GET {{baseUrl}}/api/share/00000000-0000-0000-0000-000000000000
+
+
+### 5. Create share without token — expect 401 or 403
+POST {{baseUrl}}/api/share/{{noteId}}

@@ -1,0 +1,19 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Base64-encoded HMAC secret key for JWT signing."
+    },
+    {
+      "name": "jwt.expiration.ms",
+      "type": "java.lang.Long",
+      "description": "JWT token expiration time in milliseconds."
+    },
+    {
+      "name": "notes.service.url",
+      "type": "java.lang.String",
+      "description": "Base URL of the noteshare-notes service."
+    }
+  ]
+}
