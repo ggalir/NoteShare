@@ -18,3 +18,8 @@ export async function register(email: string, password: string): Promise<void> {
   })
   if (!res.ok) throw new Error(await res.text())
 }
+
+export async function verifyAccount(token: string): Promise<void> {
+  const res = await fetch(`/api/auth/verify?token=${encodeURIComponent(token)}`)
+  if (!res.ok) throw new Error(await res.text())
+}
