@@ -28,12 +28,5 @@ class UserRegisteredListenerTest {
         verify(emailService).sendVerificationEmail(event);
     }
 
-    @Test
-    void handleUserRegistered_passesCorrectEmailFromEvent() {
-        UserRegisteredEvent event = new UserRegisteredEvent("another@test.com", "token-xyz");
 
-        listener.handleUserRegistered(event);
-
-        verify(emailService).sendVerificationEmail(event);
-    }
 }

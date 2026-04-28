@@ -5,6 +5,10 @@ import io.noteshare.auth.dto.LoginRequest;
 import io.noteshare.auth.dto.MessageResponse;
 import io.noteshare.auth.dto.RegisterRequest;
 import io.noteshare.auth.event.UserRegisteredEvent;
+import io.noteshare.auth.exception.AccountNotVerifiedException;
+import io.noteshare.auth.exception.EmailAlreadyRegisteredException;
+import io.noteshare.auth.exception.InvalidCredentialsException;
+import io.noteshare.auth.exception.InvalidVerificationTokenException;
 import io.noteshare.auth.model.User;
 import io.noteshare.auth.repository.UserRepository;
 import io.noteshare.auth.security.JwtUtil;
@@ -60,9 +64,8 @@ class AuthServiceTest {
     void registerFailsOnDuplicateEmail() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        assertThrows(EmailAlreadyRegisteredException.class,
                 () -> authService.register(new RegisterRequest("test@email.com", "password")));
-        assertEquals("Email already registered", ex.getMessage());
     }
 
     @Test
@@ -81,9 +84,8 @@ class AuthServiceTest {
         when(userRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        assertThrows(InvalidCredentialsException.class,
                 () -> authService.login(new LoginRequest("test@email.com", "wrong")));
-        assertEquals("Invalid credentials", ex.getMessage());
     }
 
     @Test
@@ -92,18 +94,16 @@ class AuthServiceTest {
         when(userRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password", "hashed")).thenReturn(true);
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        assertThrows(AccountNotVerifiedException.class,
                 () -> authService.login(new LoginRequest("test@email.com", "password")));
-        assertEquals("Account not verified", ex.getMessage());
     }
 
     @Test
     void loginFailsWithUnknownEmail() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        assertThrows(InvalidCredentialsException.class,
                 () -> authService.login(new LoginRequest("unknown@email.com", "password")));
-        assertEquals("Invalid credentials", ex.getMessage());
     }
 
     @Test
@@ -124,8 +124,7 @@ class AuthServiceTest {
     void verifyFailsWithInvalidToken() {
         when(userRepository.findByVerificationToken("bad-token")).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        assertThrows(InvalidVerificationTokenException.class,
                 () -> authService.verify("bad-token"));
-        assertEquals("Invalid verification token", ex.getMessage());
     }
 }

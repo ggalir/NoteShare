@@ -1,0 +1,120 @@
+### Base URL — change to http://noteshare-auth:8081 when testing inside Docker
+@baseUrl = http://localhost:8081
+
+### claude --resume "fix-noteshare-auth-mailer"
+
+### ─── HAPPY PATH ─────────────────────────────────────────────────────────────
+
+### 1. Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "blazej@example.com",
+  "password": "securepass123"
+}
+
+
+### 2. Login before verifying email — expect 403 Account not verified
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "blazej@example.com",
+  "password": "securepass123"
+}
+
+
+### 3. Verify email — paste token from Mailtrap inbox into @verifyToken below
+@verifyToken = PASTE_TOKEN_FROM_EMAIL_HERE
+
+GET {{baseUrl}}/api/auth/verify?token={{verifyToken}}
+
+
+### 4. Login after verification — expect 200 with JWT; token saved to jwt_token variable
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "blazej@example.com",
+  "password": "securepass123"
+}
+
+> {%
+    client.global.set("jwt_token", response.body.token);
+    client.test("Login returns JWT", function() {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(response.body.token !== undefined, "Expected token in body");
+    });
+%}
+
+### Saved JWT (use in other services):
+### Authorization: Bearer {{jwt_token}}
+
+
+### ─── VALIDATION ERRORS (400) ────────────────────────────────────────────────
+
+### 5. Register with invalid email format — expect 400
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "securepass123"
+}
+
+
+### 6. Register with password too short (< 8 chars) — expect 400
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "blazej@example.com",
+  "password": "short"
+}
+
+
+### 7. Register with blank fields — expect 400
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": ""
+}
+
+
+### ─── BUSINESS ERRORS ────────────────────────────────────────────────────────
+
+### 8. Register duplicate email — expect 409
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "blazej@example.com",
+  "password": "anotherpass456"
+}
+
+
+### 9. Login with wrong password — expect 401
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "blazej@example.com",
+  "password": "wrongpassword"
+}
+
+
+### 10. Login with unknown email — expect 401
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "nobody@example.com",
+  "password": "securepass123"
+}
+
+
+### 11. Verify with invalid token — expect 404
+GET {{baseUrl}}/api/auth/verify?token=00000000-0000-0000-0000-000000000000

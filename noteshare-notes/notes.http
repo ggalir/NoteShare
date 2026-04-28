@@ -1,0 +1,96 @@
+### Base URL — change to http://noteshare-notes:8082 when testing inside Docker
+@baseUrl = http://localhost:8082
+
+### JWT from auth service — run auth.http step 4 first to populate this
+@jwt = {{jwt_token}}
+
+
+### ─── HAPPY PATH ─────────────────────────────────────────────────────────────
+
+### 1. Create a note — expect 201; note id saved to note_id variable
+POST {{baseUrl}}/api/notes
+Content-Type: application/json
+Authorization: Bearer {{jwt}}
+
+{
+  "title": "My First Note",
+  "content": "# Hello\n\nThis is **Markdown** content."
+}
+
+> {%
+    client.global.set("note_id", response.body.id);
+    client.test("Create returns 201", function() {
+        client.assert(response.status === 201, "Expected 201");
+        client.assert(response.body.id !== undefined, "Expected id in body");
+    });
+%}
+
+
+### 2. Get all notes — expect 200 with array containing the created note
+GET {{baseUrl}}/api/notes
+Authorization: Bearer {{jwt}}
+
+
+### 3. Get note by id — expect 200
+GET {{baseUrl}}/api/notes/{{note_id}}
+Authorization: Bearer {{jwt}}
+
+
+### 4. Update note — expect 200 with updated title
+PUT {{baseUrl}}/api/notes/{{note_id}}
+Content-Type: application/json
+Authorization: Bearer {{jwt}}
+
+{
+  "title": "Updated Title",
+  "content": "# Updated\n\nNew content here."
+}
+
+
+### 5. Internal endpoint — no auth required (used by sharing-service)
+GET {{baseUrl}}/api/notes/{{note_id}}/internal
+
+
+### 6. Delete note — expect 204
+DELETE {{baseUrl}}/api/notes/{{note_id}}
+Authorization: Bearer {{jwt}}
+
+
+### 7. Get deleted note — expect 404
+GET {{baseUrl}}/api/notes/{{note_id}}
+Authorization: Bearer {{jwt}}
+
+
+### ─── VALIDATION ERRORS (400) ────────────────────────────────────────────────
+
+### 8. Create with blank title — expect 400
+POST {{baseUrl}}/api/notes
+Content-Type: application/json
+Authorization: Bearer {{jwt}}
+
+{
+  "title": "",
+  "content": "Some content"
+}
+
+
+### 9. Create with blank content — expect 400
+POST {{baseUrl}}/api/notes
+Content-Type: application/json
+Authorization: Bearer {{jwt}}
+
+{
+  "title": "Some title",
+  "content": ""
+}
+
+
+### ─── AUTH ERRORS ─────────────────────────────────────────────────────────────
+
+### 10. Get notes without token — expect 401 or 403
+GET {{baseUrl}}/api/notes
+
+
+### 11. Get non-existent note — expect 404
+GET {{baseUrl}}/api/notes/99999
+Authorization: Bearer {{jwt}}

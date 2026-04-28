@@ -5,6 +5,10 @@ import io.noteshare.auth.dto.LoginRequest;
 import io.noteshare.auth.dto.MessageResponse;
 import io.noteshare.auth.dto.RegisterRequest;
 import io.noteshare.auth.event.UserRegisteredEvent;
+import io.noteshare.auth.exception.AccountNotVerifiedException;
+import io.noteshare.auth.exception.EmailAlreadyRegisteredException;
+import io.noteshare.auth.exception.InvalidCredentialsException;
+import io.noteshare.auth.exception.InvalidVerificationTokenException;
 import io.noteshare.auth.model.User;
 import io.noteshare.auth.repository.UserRepository;
 import io.noteshare.auth.security.JwtUtil;
@@ -38,7 +42,7 @@ public class AuthService {
     @Transactional
     public MessageResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new EmailAlreadyRegisteredException();
         }
         User user = new User();
         user.setEmail(request.email());
@@ -53,12 +57,12 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(InvalidCredentialsException::new);
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
         if (!user.isVerified()) {
-            throw new RuntimeException("Account not verified");
+            throw new AccountNotVerifiedException();
         }
         return new AuthResponse(jwtUtil.generateToken(user.getId()));
     }
@@ -66,7 +70,7 @@ public class AuthService {
     @Transactional
     public MessageResponse verify(String token) {
         User user = userRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid verification token"));
+                .orElseThrow(InvalidVerificationTokenException::new);
         user.setVerified(true);
         user.setVerificationToken(null);
         userRepository.save(user);
