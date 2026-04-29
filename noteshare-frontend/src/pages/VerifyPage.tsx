@@ -4,18 +4,17 @@ import { verifyAccount } from '../api/auth'
 
 export default function VerifyPage() {
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const token = searchParams.get('token')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    token ? 'loading' : 'error'
+  )
 
   useEffect(() => {
-    const token = searchParams.get('token')
-    if (!token) {
-      setStatus('error')
-      return
-    }
+    if (!token) return
     verifyAccount(token)
       .then(() => setStatus('success'))
       .catch(() => setStatus('error'))
-  }, [searchParams])
+  }, [token])
 
   if (status === 'loading') {
     return (
