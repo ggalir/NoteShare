@@ -131,9 +131,11 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME}
-      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD}
-      AUTH_VERIFY_URL: http://localhost:3000/verify
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      AUTH_VERIFY_URL: ${AUTH_VERIFY_URL}
     depends_on:
       rabbitmq:
         condition: service_healthy
