@@ -10,6 +10,8 @@ services:
       POSTGRES_PASSWORD: secret
     ports:
       - "5433:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d auth"]
       interval: 10s
@@ -24,6 +26,8 @@ services:
       POSTGRES_PASSWORD: secret
     ports:
       - "5434:5432"
+    volumes:
+      - postgres-notes-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d notes"]
       interval: 10s
@@ -38,6 +42,8 @@ services:
       POSTGRES_PASSWORD: secret
     ports:
       - "5435:5432"
+    volumes:
+      - postgres-sharing-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d sharing"]
       interval: 10s
@@ -63,6 +69,7 @@ services:
       dockerfile: ../Dockerfile
     ports:
       - "8081:8081"
+    restart: unless-stopped
     environment:
       DB_URL: jdbc:postgresql://postgres-auth:5432/auth
       DB_USERNAME: ${AUTH_DB_USERNAME}
@@ -84,6 +91,7 @@ services:
       dockerfile: ../Dockerfile
     ports:
       - "8082:8082"
+    restart: unless-stopped
     environment:
       DB_URL: jdbc:postgresql://postgres-notes:5432/notes
       DB_USERNAME: ${NOTES_DB_USERNAME}
@@ -100,6 +108,7 @@ services:
       dockerfile: ../Dockerfile
     ports:
       - "8083:8083"
+    restart: unless-stopped
     environment:
       DB_URL: jdbc:postgresql://postgres-sharing:5432/sharing
       DB_USERNAME: ${SHARING_DB_USERNAME}
@@ -117,6 +126,7 @@ services:
     build:
       context: ./noteshare-mailer
       dockerfile: ../Dockerfile
+    restart: unless-stopped
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
@@ -133,7 +143,13 @@ services:
       context: ./noteshare-frontend
     ports:
       - "3000:80"
+    restart: unless-stopped
     depends_on:
       - noteshare-auth
       - noteshare-notes
       - noteshare-sharing
+
+volumes:
+  postgres-auth-data:
+  postgres-notes-data:
+  postgres-sharing-data:

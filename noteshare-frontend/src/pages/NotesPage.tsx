@@ -11,6 +11,7 @@ export default function NotesPage() {
   const [content, setContent] = useState('')
   const [shareLink, setShareLink] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function NotesPage() {
     setTitle(note.title)
     setContent(note.content)
     setShareLink('')
+    setError('')
   }
 
   function newNote() {
@@ -35,6 +37,7 @@ export default function NotesPage() {
     setTitle('')
     setContent('')
     setShareLink('')
+    setError('')
   }
 
   async function save() {
@@ -50,6 +53,9 @@ export default function NotesPage() {
         setNotes(prev => [created, ...prev])
         setSelected(created)
       }
+      setError('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save note')
     } finally {
       setSaving(false)
     }
@@ -57,16 +63,25 @@ export default function NotesPage() {
 
   async function remove() {
     if (!selected || !window.confirm('Delete this note?')) return
-    await deleteNote(selected.id)
-    setNotes(prev => prev.filter(n => n.id !== selected.id))
-    newNote()
+    try {
+      await deleteNote(selected.id)
+      setNotes(prev => prev.filter(n => n.id !== selected.id))
+      newNote()
+    } catch {
+      setError('Failed to delete note')
+    }
   }
 
   async function share() {
     if (!selected) return
     setShareLink('')
-    const { token } = await createShare(selected.id)
-    setShareLink(`${window.location.origin}/share/${token}`)
+    try {
+      const { token } = await createShare(selected.id)
+      setShareLink(`${window.location.origin}/share/${token}`)
+      setError('')
+    } catch {
+      setError('Failed to generate share link')
+    }
   }
 
   const hasChanges = selected
@@ -126,6 +141,18 @@ export default function NotesPage() {
             </>
           )}
         </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className="d-flex align-items-center gap-2 px-3 py-2 bg-danger-subtle border-bottom">
+            <span className="small text-danger flex-grow-1">{error}</span>
+            <button
+              type="button"
+              className="btn-close btn-sm"
+              onClick={() => setError('')}
+            />
+          </div>
+        )}
 
         {/* Share link banner */}
         {shareLink && (
